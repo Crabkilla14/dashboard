@@ -73,9 +73,51 @@ def main() -> None:
             card,
             text=f"Gennemsnit: {avg:.1f}",
             font=("Helvetica", 11, "bold"),
+            
         ).pack(anchor=W, pady=(0, 6))
 
         render_subject_chart(card, subject, grades, colors[idx % len(colors)])
+
+    # Samlet gennemsnit for alle fag
+    # Beregn kombinerede gennemsnit pr. prøve på tværs af fag
+    first_subject = next(iter(data["subjects"].values())) if data["subjects"] else {}
+    assessment_labels = list(first_subject.keys())
+    combined_by_assessment = {}
+    for label in assessment_labels:
+        vals = [g.get(label) for g in data["subjects"].values() if label in g]
+        combined_by_assessment[label] = sum(vals) / len(vals) if vals else 0
+
+    # Vis nyt kort med den kombinerede graf (spændt over alle 3 kolonner)
+    combined_card = tb.Labelframe(
+        main,
+        text="Samlet pr. prøve",
+        padding=10,
+        bootstyle="info",
+    )
+    combined_card.grid(row=1, column=0, columnspan=3, sticky="nsew", padx=6, pady=6)
+
+    tb.Label(
+        combined_card,
+        text="Gennemsnit pr. prøve (på tværs af fag):",
+        font=("Helvetica", 11, "bold"),
+    ).pack(anchor=W, pady=(0, 6))
+
+    render_subject_chart(combined_card, "Samlede gennemsnit", combined_by_assessment, "#6f42c1")
+
+    # Fortsæt med samlet gennemsnit for alle fag
+    all_scores = []
+    for grades in data["subjects"].values():
+        all_scores.extend(grades.values())
+    overall_avg = sum(all_scores) / len(all_scores) if all_scores else 0
+
+    footer = tb.Frame(app, padding=8)
+    footer.grid(row=2, column=0, sticky="ew")
+    tb.Label(
+        footer,
+        text=f"Samlet gennemsnit for alle fag: {overall_avg:.1f}",
+        font=("Helvetica", 11, "bold"),
+        bootstyle="secondary",
+    ).pack(side=LEFT)
 
     app.mainloop()
 
